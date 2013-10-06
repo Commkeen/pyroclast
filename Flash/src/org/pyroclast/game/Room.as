@@ -10,30 +10,22 @@ package org.pyroclast.game
 	{
 		public var roomID:Number;
 		
-		public var roomX:int;
-		public var roomY:int;
+		public var roomX:int; //Coordinates on map
+		public var roomY:int; //Coordinates on map
 		
-		public var backgroundMap:String;
-		public var backgroundTileset:Class;
+		public var area:uint; //What game area we are in
 		
-		public var foregroundCollidableMap:String;
-		public var foregroundCollidableTileset:Class;
+		public var backgroundImage:Class; //Splash background, if any
 		
-		public var foregroundNoncollidableMap:String;
-		public var foregroundNoncollidableTileset:Class;
+		public var LayerTilesets:Vector.<String>; //Each layer's tileset is a string here
+		public var LayerMaps:Vector.<String>; //Each layer's tilemap is a CSV string here
 		
-		public var musicChange:String;
+		public var musicID:String; //The name of the music for this room (optional, area default overrides)
 		
 		public var actors:Array; //2D array of values for each tile position
 		
-		public var hasLava:Boolean;
-		
-		public var retrievedGems:Array;
-		
-		public var forceFieldActive:Boolean;
-		public var forceFieldGemsRequired:int;
-		
 		//Exits
+		//Optional, they override default coordinate system checking
 		public var topExit:Number;
 		public var bottomExit:Number;
 		public var leftExit:Number;
@@ -41,22 +33,16 @@ package org.pyroclast.game
 		
 		public function Room() 
 		{
-			musicChange = "";
+			musicID = "";
 			
-			roomX = 1000;
-			roomY = 1000;
+			roomID = 99999;
+			roomX = 10000;
+			roomY = 10000;
 			
-			topExit = 1;
-			bottomExit = 1;
-			leftExit = 1;
-			rightExit = 1;
+			area = 0;
 			
-			hasLava = false;
-			
-			retrievedGems = new Array();
-			
-			forceFieldActive = false;
-			forceFieldGemsRequired = 0;
+			LayerMaps = new Vector.<String>;
+			LayerTilesets = new Vector.<String>;
 		}
 		
 	}

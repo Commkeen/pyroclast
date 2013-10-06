@@ -1,14 +1,15 @@
 package org.pyroclast.system
 {
 	import flash.geom.Point;
+	import flash.media.Microphone;
 	import org.flixel.FlxTilemap;
 
 	public class RoomData
 	{
 		public var room_id:uint;
 		public var area:uint = 0;
-		public var layer_tilesets:Array; //Each is a 1D array of integers representing tiles in the tileset
-		public var layer_data:Array; //Each layer_data contains a string csv of tile indices
+		public var layer_tilesets:Vector.<String>; //Each is string representing the tileset to use
+		public var layer_data:Vector.<Array>; //Each layer_data is a 1D array of tile indices
 		public var backgroundImage_src:String; //Optional for overriding area default
 		public var backgroundMusic_src:String; //Optional for overriding area default
 		public var prefabs:Array;	// This will hold any game object prefabs the room contains. These will, essentially be anything that is not a tile
@@ -39,8 +40,8 @@ package org.pyroclast.system
 		private function init_room():void
 		{
 			empty = true;
-			layer_data = new Array();
-			layer_tilesets = new Array();
+			layer_data = new Vector.<Array>;
+			layer_tilesets = new Vector.<String>;
 			
 			
 			
@@ -49,26 +50,26 @@ package org.pyroclast.system
 		
 		public function getTileIndex(layer:uint, coords:Point):int
 		{
-			return layer_data[layer][coords.y * height + coords.x];
+			return layer_data[layer][coords.y * width + coords.x];
 			//return tile_data[coords.y][coords.x];
 		}
 		
 		public function checkTileSet(layer:uint, coords:Point):Boolean
 		{
-			return layer_data[layer][coords.y * height + coords.x] != null;
+			return layer_data[layer][coords.y * width + coords.x] != null;
 			//return tile_data[coords.y][coords.x] != null;
 		}
 		
 		public function setTile(layer:uint, coords:Point, tileIndex:int):void
 		{
 			empty = false;
-			layer_data[layer][coords.y * height + coords.x] = tileIndex;
+			layer_data[layer][coords.y * width + coords.x] = tileIndex;
 			//tile_data[coords.y][coords.x] = new TileData(src, tileset_coords);
 		}
 		
 		public function clearTile(layer:uint, coords:Point):void
 		{
-			layer_data[layer][coords.y * height + coords.x] = 0;
+			layer_data[layer][coords.y * width + coords.x] = 0;
 		}
 		
 		public function toXML():XML
@@ -104,14 +105,14 @@ package org.pyroclast.system
 		
 		public function loadFromXML(room:XML):void
 		{
-			layer_tilesets = new Array();
-			layer_data = new Array();
+			layer_tilesets = new Vector.<String>;
+			layer_data = new Vector.<Array>;
 			
 			//Load room attributes
 			empty = false;
 			
-			width = 1;
-			height = 1;
+			width = 20;
+			height = 15;
 			
 			room_id = room.@id;
 			area = room.@area;
@@ -127,9 +128,9 @@ package org.pyroclast.system
 			//Load layers
 			for each (var layer:XML in room.layer)
 			{
-				var layerIndex = layer.@number;
+				var layerIndex:int = layer.@index;
 				layer_tilesets[layerIndex] = layer.@tileset;
-				layer_data[layerIndex] = CSVToArray(layer.toString());
+				layer_data[layerIndex] = CSVToArray(layer);
 			}
 		}
 		
@@ -139,7 +140,7 @@ package org.pyroclast.system
 			var columns:Array;
 			var rows:Array = csv.split("\n");
 			var heightInTiles = rows.length;
-			var widthInTiles;
+			var widthInTiles = 20; //TODO: Figure out properly
 			var returnArray = new Array();
 			var row:uint = 0;
 			var column:uint;

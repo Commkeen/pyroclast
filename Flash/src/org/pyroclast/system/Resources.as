@@ -55,39 +55,13 @@ package org.pyroclast.system
 		
 		
 		//Tilesets
+		[Embed(source = "../../../../Assets/tilesets/doodles.png")]
+		public static var doodlesTileset:Class;
 		
-		[Embed(source = "../../../../Assets/crystalForegroundTiles.png")]
-		public static var crystalTiles:Class;
+		[Embed(source = "../../../../Assets/tilesets/grass.png")]
+		public static var grassTileset:Class;
 		
-		[Embed(source = "../../../../Assets/grassForegroundTiles.png")]
-		public static var grassTiles:Class;
 		
-		[Embed(source = "../../../../Assets/lavaForegroundTiles.png")]
-		public static var lavaTiles:Class;
-		
-		[Embed(source = "../../../../Assets/slimeForegroundTiles.png")]
-		public static var slimeTiles:Class;
-		
-		[Embed(source = "../../../../Assets/shrineForegroundTilesDark.png")]
-		public static var shrineTiles:Class;
-		
-		[Embed(source = "../../../../Assets/VoidRoomTiles.png")]
-		public static var voidTiles:Class;
-		
-		[Embed(source = "../../../../Assets/biodome.png")]
-		private static var bgTiles:Class;
-		
-		[Embed(source = "../../../../Assets/slimeBg.png")]
-		private static var slimeBgTiles:Class;
-		
-		[Embed(source = "../../../../Assets/slimeCleanBg.png")]
-		private static var slimeCleanBgTiles:Class;
-		
-		[Embed(source = "../../../../Assets/shrineBgNew.png")]
-		private static var shrineBgTiles:Class;
-		
-		[Embed(source = "../../../../Assets/crystalCentralBg.png")]
-		private static var crystalCentralBg:Class;
 		
 		//Sound
 		[Embed(source="../../../../Assets/Pickup_Coin.mp3")]

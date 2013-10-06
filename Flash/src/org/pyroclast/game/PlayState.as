@@ -6,6 +6,8 @@ package org.pyroclast.game
 	 */
 	
 	 import flash.display.Bitmap;
+	 import flash.geom.Point;
+	 import flash.media.Camera;
 	 import flash.utils.ByteArray;
 	 import org.flixel.*;
 	 import org.flixel.system.FlxTile;
@@ -13,19 +15,24 @@ package org.pyroclast.game
 	 
 	public class PlayState extends FlxState
 	{
+		public const NUM_OF_LAYERS:int = 4;
+		public const COLLIDING_LAYER:int = 2;
+		public var tilemaps:Vector.<FlxTilemap>;
 		
-		public var background:FlxTilemap;
-		public var foregroundCollidable:FlxTilemap;
-		public var foregroundNoncollidable:FlxTilemap;
+		//Groups for depth, in order from back to front
+		public var backgroundImageDepth:FlxGroup;
+		public var backgroundTerrain1Depth:FlxGroup;
+		public var backgroundTerrain2Depth:FlxGroup;
+		public var baseTerrainDepth:FlxGroup;
+		public var actorDepth:FlxGroup;
+		public var effectsDepth:FlxGroup;
+		public var foregroundDepth:FlxGroup;
+		public var hudDepth:FlxGroup;
 		
 		public var deathParticleGroup:FlxGroup;
 		public var damagingTilesGroup:FlxGroup;
-		public var forceFieldsGroup:FlxGroup;
-		public var forceFieldTextGroup:FlxGroup;
 		
 		public var player:Player;
-		public var puppy:FlxSprite;
-		public var portal:FlxSprite;
 		
 		public var gemsCounter:FlxText;
 		public var gemsCounterTimer:Number;
@@ -53,30 +60,46 @@ package org.pyroclast.game
 		
 		override public function create():void
 		{
-			world = new World(new RoomDataManager(""));
+			world = new World(GameManager.roomDataManager);
 			
 			actorArray = new Array();
 			
+			tilemaps = new Vector.<FlxTilemap>();
+			
+			//Instantiate drawing groups
+			backgroundImageDepth = new FlxGroup();
+			backgroundTerrain1Depth = new FlxGroup();
+			backgroundTerrain2Depth = new FlxGroup();
+			baseTerrainDepth = new FlxGroup();
+			actorDepth = new FlxGroup();
+			effectsDepth = new FlxGroup();
+			foregroundDepth = new FlxGroup();
+			hudDepth = new FlxGroup();
+			
+			add(backgroundImageDepth);
+			add(backgroundTerrain1Depth);
+			add(backgroundTerrain2Depth);
+			add(baseTerrainDepth);
+			add(actorDepth);
+			add(effectsDepth);
+			add(foregroundDepth);
+			add(hudDepth);
+			
+			
 			deathParticleGroup = new FlxGroup();
-			forceFieldsGroup = new FlxGroup();
 			damagingTilesGroup = new FlxGroup();
-			forceFieldTextGroup = new FlxGroup();
 			bulletsGroup = new FlxGroup();
+			
+			effectsDepth.add(deathParticleGroup);
+			effectsDepth.add(bulletsGroup);
+			effectsDepth.add(damagingTilesGroup);
 			
 			currentMusic = "";
 			
-			LoadRoom(world.GetRoomFromID(100));
+			LoadRoom(world.GetRoomFromCoordinates(GameManager.currentRoomCoords.x, GameManager.currentRoomCoords.y));
 			
-			gemsCollected = 0;
-			gemsNeeded = 100;
-			gemsCounterTimer = 0;
-			gemsCounterTimerMax = 150;
-			
-			gemsCounter = new FlxText(10, -20, FlxG.width, "Gems: 0");
-			gemsCounter.setFormat(null, 8, 0xFFFFFF);
-			add(gemsCounter);
-			
-			
+			//TODO
+			/*
 			newAreaTextTimer = 0;
 			newAreaTextTimerMax = 150;
 			newAreaText = new FlxText(10, 200, FlxG.width, "The Void");
@@ -86,22 +109,20 @@ package org.pyroclast.game
 			crystalVisited = false;
 			slimeVisited = false;
 			shrineVisited = false;
+			*/
 			
 			//Create player
 			player = new Player(this, 140, 40);
 			player.init();
-			player.saveRoomIndex = 100;
+			player.saveRoomIndex = currentRoom.roomID;
 			player.saveRoomPosition = player.getMidpoint();
-			add(player);
+			actorDepth.add(player);
 			
-			FlxG.camera.setBounds(0, 0, 320, 240, true);
-			FlxG.camera.follow(player, FlxCamera.STYLE_PLATFORMER);
-			
-			add(damagingTilesGroup);
-			add(forceFieldsGroup);
-			add(deathParticleGroup);
-			add(forceFieldTextGroup);
-			add(bulletsGroup);
+			FlxG.camera.visible = false;
+			var gameCamera:FlxCamera = new FlxCamera(0, 0, 320, 240, 2);
+			FlxG.addCamera(gameCamera);
+			gameCamera.setBounds(0, 0, 320, 240, true);
+			gameCamera.follow(player, FlxCamera.STYLE_PLATFORMER);
 			
 		}
 		
@@ -110,11 +131,18 @@ package org.pyroclast.game
 	
 			super.update();
 			
+			//If the player presses "P", switch to the editor using this room
+			if (FlxG.keys.justPressed("P"))
+			{
+				GameManager.currentRoom = currentRoom.roomID;
+				GameManager.currentRoomCoords = new Point(currentRoom.roomX, currentRoom.roomY);
+				GameManager.switchState();
+			}
+			
 			FlxG.camera.follow(player);
 	
-			FlxG.collide(foregroundCollidable, player);
-			FlxG.collide(forceFieldsGroup, player);
-			FlxG.collide(deathParticleGroup, foregroundCollidable);
+			FlxG.collide(tilemaps[COLLIDING_LAYER], player);
+			FlxG.collide(deathParticleGroup, tilemaps[COLLIDING_LAYER]);
 			
 			
 			var bulletCollide = function(object1:FlxObject, object2:FlxObject)
@@ -132,21 +160,7 @@ package org.pyroclast.game
 			}
 			
 			
-			FlxG.collide(bulletsGroup, foregroundCollidable, bulletCollide);
-			
-			//Maintain gems counter
-			if (gemsCounterTimer > 0)
-			{
-				gemsCounterTimer--;
-			}
-			if (gemsCounterTimer <= 0 && gemsCounter.y > -20)
-			{
-				gemsCounter.y--;
-			}
-			if (gemsCounterTimer > 0 && gemsCounter.y < 20)
-			{
-				gemsCounter.y++;
-			}
+			FlxG.collide(bulletsGroup, tilemaps[COLLIDING_LAYER], bulletCollide);
 			
 			//Maintain new area text
 			if (newAreaTextTimer > 0)
@@ -186,24 +200,16 @@ package org.pyroclast.game
 					}
 				}
 			}
-			
-			if (puppy != null && FlxG.collide(puppy, player))
-			{
-				GetPuppy();
-			}
 		}
 		
 		public function ChangeRoom(direction:String):void
 		{
-			remove(background);
-			remove(foregroundCollidable);
-			remove(foregroundNoncollidable);
-			forceFieldsGroup.kill();
-			forceFieldTextGroup.kill();
-			damagingTilesGroup.kill();
+			for each (var tilemap:FlxTilemap in tilemaps)
+			{
+				tilemap.kill();
+			}
 			
-			portal = null;
-			puppy = null;
+			damagingTilesGroup.kill();
 			
 			//Remove everything in actor array
 			var i:Number = 0;
@@ -220,25 +226,37 @@ package org.pyroclast.game
 			
 			player.solid = FlxObject.NONE;
 			
-			var roomID:Number = 1;
+			//Check what room to go to next
+			var nextRoomID:Number = null;
+			var nextRoomX:Number = currentRoom.roomX;
+			var nextRoomY:Number = currentRoom.roomY;
 			if (direction == "down")
 			{
-				roomID = currentRoom.bottomExit;
+				nextRoomID = currentRoom.bottomExit;
+				nextRoomY++;
 			}
 			if (direction == "up")
 			{
-				roomID = currentRoom.topExit;
+				nextRoomID = currentRoom.topExit;
+				nextRoomY--;
 			}
 			if (direction == "left")
 			{
-				roomID = currentRoom.leftExit;
+				nextRoomID = currentRoom.leftExit;
+				nextRoomX--;
 			}
 			if (direction == "right")
 			{
-				roomID = currentRoom.rightExit;
+				nextRoomID = currentRoom.rightExit;
+				nextRoomX++;
 			}
 			
-			LoadRoom(world.GetRoomFromID(roomID));
+			/*
+			if (nextRoomID != 0)
+				LoadRoom(world.GetRoomFromID(roomID));
+				*/
+			//else
+			LoadRoom(world.GetRoomFromCoordinates(nextRoomX, nextRoomY));
 			
 			if (direction == "down")
 			{
@@ -250,7 +268,6 @@ package org.pyroclast.game
 				if (FlxG.keys.RIGHT)
 					player.x -= 1;
 				
-				roomID = currentRoom.bottomExit;
 			}
 			if (direction == "up")
 			{
@@ -262,18 +279,14 @@ package org.pyroclast.game
 				if (FlxG.keys.RIGHT)
 					player.x -= 1;
 					
-				roomID = currentRoom.topExit;
 			}
 			if (direction == "left")
 			{
 				player.x = 305;
-				roomID = currentRoom.leftExit;
 			}
 			if (direction == "right")
 			{
 				player.x = -10;
-				//player.y -= 5;
-				roomID = currentRoom.rightExit;
 			}
 			
 			player.solid = FlxObject.ANY;
@@ -282,37 +295,45 @@ package org.pyroclast.game
 		
 		public function LoadRoom(room:Room):void
 		{
-			remove(gemsCounter);
 			currentRoom = room;
 			
-			background = new FlxTilemap();
-			foregroundNoncollidable = new FlxTilemap();
-			foregroundCollidable = new FlxTilemap();
-			forceFieldsGroup.revive();
-			forceFieldTextGroup.revive();
+			//Reinit tilemaps
+			for (var i:int = 0; i < NUM_OF_LAYERS; i++)
+			{
+				tilemaps[i] = new FlxTilemap();
+			}
+			
+			//Reinit damaging tiles group
 			damagingTilesGroup.revive();
 			
-			background.loadMap(room.backgroundMap, room.backgroundTileset, 32, 32, FlxTilemap.OFF, 0, 0, 0);
-			if (room.foregroundCollidableMap != null)
-				foregroundCollidable.loadMap(room.foregroundCollidableMap, room.foregroundCollidableTileset, 16, 16, FlxTilemap.OFF);
-			if (room.foregroundNoncollidableMap != null)
-				foregroundNoncollidable.loadMap(room.foregroundNoncollidableMap, room.foregroundNoncollidableTileset, 16, 16, FlxTilemap.OFF);
+			for (var i:int = 0; i < NUM_OF_LAYERS; i++)
+			{
+				if (room.LayerMaps[i] != null)
+				{
+					var layerTileset:Class = AssetLoader.getTilesetBySrc(room.LayerTilesets[i]).img;
+					
+					tilemaps[i].loadMap(room.LayerMaps[i], layerTileset, 16, 16, FlxTilemap.OFF);
+				}
+			}
+		
 			
-			if (room.backgroundMap != null)
+			
+			
+			if (tilemaps[0].totalTiles > 0)
 			{
 				FlxG.bgColor = FlxG.BLACK;
-				add(background);
+				backgroundTerrain1Depth.add(tilemaps[0]);
 			}
 			else
 			{
 				FlxG.bgColor = FlxG.WHITE;
 			}
 			
-			if (room.foregroundCollidableMap != null)
-				add(foregroundCollidable);
-			if (room.foregroundNoncollidableMap != null)
-				add(foregroundNoncollidable);
+			if (tilemaps[2].totalTiles > 0)
+				foregroundDepth.add(tilemaps[2]);
 				
+			// TODO
+			/*
 			//Mark tiles as semipassable
 			if (room.foregroundCollidableTileset == Resources.crystalTiles)
 			{
@@ -437,67 +458,14 @@ package org.pyroclast.game
 					}
 				}
 			}
+			*/
 			
-			//Add lava
-			if (room.hasLava)
-			{
-				var i:Number;
-				
-				for (i = 0; i < 20; i++)
-				{
-					var lavaTile:FlxSprite = new FlxSprite(i * 16, 208);
-					lavaTile.loadGraphic(Resources.lavaSprite, true, false, 16, 16);
-					actorArray.push(lavaTile);
-					add(lavaTile);
-					lavaTile.addAnimation("wave", new Array(0, 1), 2, true);
-					lavaTile.play("wave");
-					
-					var lavaUnderTile:FlxSprite = new FlxSprite(i * 16, 224);
-					lavaUnderTile.loadGraphic(Resources.lavaSprite, true, false, 16, 16);
-					lavaUnderTile.makeGraphic(16, 16, 0xFFCC0707);
-					actorArray.push(lavaUnderTile);
-					add(lavaUnderTile);
-				}
-					
-			}
-			
-			//Add portal/puppy
-			if (room.roomID == 20)
-			{
-				if (gemsCollected >= gemsNeeded)
-				{
-					portal = new FlxSprite(176, 112);
-					portal.loadGraphic(Resources.portalSprite, true, false, 32, 32);
-					portal.addAnimation("pulse", new Array(0, 1, 2, 3, 4, 3, 2, 1), 4, true);
-					portal.play("pulse");
-					actorArray.push(portal);
-					add(portal);
-				}
-				else
-				{
-					var portalTxt:FlxText = new FlxText(150, 70, FlxG.width, gemsCollected + "/" + gemsNeeded);
-					portalTxt.setFormat(null, 8, 0xFF0000);
-					actorArray.push(portalTxt);
-					add(portalTxt);
-				}
-			}
-			
-			if (room.roomID == 404)
-			{
-				puppy = new FlxSprite(8*16, 10*16);
-				puppy.loadGraphic(Resources.doorSprite, true, false, 64, 48);
-				//puppy.addAnimation("bounce", new Array(0, 1), 2, true);
-				//puppy.play("bounce");
-				actorArray.push(puppy);
-				add(puppy);
-			}
-			
-			add(gemsCounter);
 		}
 		
 		//Called by player when dead to reset
 		public function OnPlayerDeath():void
 		{
+			/*
 			remove(gemsCounter);
 			remove(background);
 			remove(foregroundCollidable);
@@ -529,31 +497,19 @@ package org.pyroclast.game
 			LoadRoom(world.GetRoomFromID(player.saveRoomIndex));
 			
 			add(gemsCounter);
+			*/
 		}
 		
-		//Get puppy
-		public function GetPuppy():void
+		/**
+		 * Called by GameManager when we switch here from the editor.
+		 * Loads up the room we were just editing and places the player where we put him.
+		 * @param	roomID
+		 */
+		public function switchFromEditor(roomID:int, playerCoords:Point)
 		{
-			//Goto end screen
-			FlxG.switchState(new EndMenuState());
+			
 		}
 		
-		//Removes an actor from a room permanently
-		//For gems, upgrades, etc.
-		/*
-		public function RemoveGemPermanently(gem:Gem):void
-		{
-			currentRoom.retrievedGems.push(gem);
-			remove(gem);
-		}
-		*/
-		
-		public function RemoveForceFieldPermanently():void
-		{
-			currentRoom.forceFieldActive = false;
-			forceFieldsGroup.kill();
-			forceFieldsGroup.revive();
-		}
 		
 	}
 

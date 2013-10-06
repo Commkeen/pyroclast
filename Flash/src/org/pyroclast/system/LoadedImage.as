@@ -1,16 +1,16 @@
 package org.pyroclast.system
 {
 	
-	import flash.display.BitmapData;
+	import flash.display.Bitmap;
 	
 	public class LoadedImage
 	{
 		public var src:String;
-		public var bitmapData:BitmapData;
+		public var img:Class;
 		
-		public function LoadedImage(data:BitmapData,srcfile:String)
+		public function LoadedImage(data:Class,srcfile:String)
 		{
-			bitmapData = data;
+			img = data;
 			src = srcfile;
 		}
 		

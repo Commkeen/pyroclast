@@ -40,7 +40,7 @@ package org.pyroclast.game
 			
 			if (FlxG.keys.justPressed("SPACE"))
 			{
-				FlxG.switchState(new PlayState());
+				GameManager.startGame();
 			}
 		}
 		

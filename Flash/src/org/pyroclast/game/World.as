@@ -2,6 +2,7 @@ package org.pyroclast.game
 {
 	
 	import org.pyroclast.system.*;
+	import org.flixel.FlxTilemap;
 	
 	/**
 	 * The World is a collection of Rooms.
@@ -70,7 +71,20 @@ package org.pyroclast.game
 			room.roomX = data.roomX;
 			room.roomY = data.roomY;
 			
+			
 			//TODO
+			
+			for (var i:int = 0; i < data.layer_tilesets.length; i++)
+			{
+				room.LayerTilesets[i] = data.layer_tilesets[i];
+				
+				
+			}
+			
+			for (var i:int = 0; i < data.layer_data.length; i++)
+			{
+				room.LayerMaps[i] = FlxTilemap.arrayToCSV(data.layer_data[i], data.width);
+			}
 			
 			return room;
 		}

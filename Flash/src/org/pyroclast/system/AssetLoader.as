@@ -10,34 +10,37 @@ package org.pyroclast.system
 	
 	public class  AssetLoader
 	{
-		public const ASSET_DIR:String = "../assets/";
-		public const TILESET_DIR:String = "tilesets/";
+		public static const ASSET_DIR:String = "../assets/";
+		public static const TILESET_DIR:String = "tilesets/";
 		
-		public var tilesets:Vector.<LoadedImage>;
+		public static var tilesets:Vector.<LoadedImage>;
 		
-		public var total_assets:uint = 1;
-		public var loaded_assets:uint = 0;
+		public static var total_assets:uint = 1;
+		public static var loaded_assets:uint = 0;
 		
-		public var onFullyLoaded:Function;
+		public static var onFullyLoaded:Function;
 		
-		public var masterFilePath:String; 						// Just because it sounds cool
+		public static var masterFilePath:String; 						// Just because it sounds cool
 		
-		public function AssetLoader(callback:Function = null)
+		public static function init(callback:Function = null)
 		{
 			onFullyLoaded = callback;
 			trace("got here!!");
-			loadXML(ASSET_DIR + TILESET_DIR + "images.xml", loadTilesets);
 			loadXML(ASSET_DIR + "masterFilePath.xml", setMasterFilePath);
+			
+			tilesets = new Vector.<LoadedImage>();
+			tilesets[0] = new LoadedImage(Resources.doodlesTileset, "doodles.png");
+			tilesets[1] = new LoadedImage(Resources.grassTileset, "grass.png");
+			onFullyLoaded();
 			
 			function setMasterFilePath(xml:XML):void
 			{
 				masterFilePath = xml.@src;
 				trace(masterFilePath);
-				countLoadedAsset();
 			}
 		}
 		
-		public function loadXML(file:String, onComplete:Function):void
+		public static function loadXML(file:String, onComplete:Function):void
 		{
 			var xml:XML;
 			var loader:URLLoader = new URLLoader();
@@ -51,11 +54,13 @@ package org.pyroclast.system
 			}
 		}
 		
-		public function loadTilesets(xml:XML):void
+		public static function loadTilesets(xml:XML):void
 		{
-			tilesets = new Vector.<LoadedImage>();
-			var loaders:Array = new Array();
 			
+			
+			//var loaders:Array = new Array();
+			
+			/*
 			for each(var image:XML in xml.image)
 			{
 				var loader:SpecialLoader = new SpecialLoader();
@@ -72,13 +77,14 @@ package org.pyroclast.system
 			function loadImage(e:Event):void
 			{
 				trace(e.target.loader.data[0]);
-				var completedImage:LoadedImage = new LoadedImage(Bitmap(e.target.content).bitmapData, e.target.loader.data[0]);
+				var completedImage:LoadedImage = new LoadedImage(Bitmap(e.target.content), e.target.loader.data[0]);
 				tilesets.push(completedImage);
 				countLoadedAsset();
 			}
+			*/
 		}
 		
-		public function countLoadedAsset():void
+		public static function countLoadedAsset():void
 		{
 			++loaded_assets;
 			if (onFullyLoaded && loaded_assets == total_assets)
@@ -87,7 +93,7 @@ package org.pyroclast.system
 			}
 		}
 		
-		public function getTilesetBySrc(src:String):LoadedImage
+		public static function getTilesetBySrc(src:String):LoadedImage
 		{
 			if (!tilesets) return null;
 			
