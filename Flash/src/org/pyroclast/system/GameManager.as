@@ -14,6 +14,7 @@ package org.pyroclast.system
 	public class GameManager
 	{
 		
+		
 		public static var roomDataManager:RoomDataManager;
 		public static var currentRoom:int;
 		public static var currentRoomCoords:Point;

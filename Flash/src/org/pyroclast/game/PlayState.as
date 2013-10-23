@@ -137,6 +137,7 @@ package org.pyroclast.game
 				GameManager.currentRoom = currentRoom.roomID;
 				GameManager.currentRoomCoords = new Point(currentRoom.roomX, currentRoom.roomY);
 				GameManager.switchState();
+				return;
 			}
 			
 			FlxG.camera.follow(player);
@@ -326,11 +327,19 @@ package org.pyroclast.game
 			}
 			else
 			{
-				FlxG.bgColor = FlxG.WHITE;
+				FlxG.bgColor = FlxG.BLACK;
+			}
+			
+			if (tilemaps[1].totalTiles > 0)
+			{
+				backgroundTerrain2Depth.add(tilemaps[1]);
 			}
 			
 			if (tilemaps[2].totalTiles > 0)
-				foregroundDepth.add(tilemaps[2]);
+				baseTerrainDepth.add(tilemaps[2]);
+				
+			if (tilemaps[3].totalTiles > 0)
+				foregroundDepth.add(tilemaps[3]);
 				
 			// TODO
 			/*

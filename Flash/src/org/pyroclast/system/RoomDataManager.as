@@ -1,8 +1,10 @@
 package org.pyroclast.system 
 {
 	import flash.events.Event;
+	import flash.net.FileReference;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
+	import flash.utils.ByteArray;
 	/**
 	 * ...
 	 * @author Matthew Everett
@@ -81,22 +83,53 @@ package org.pyroclast.system
 		
 		public function saveAllRoomDataAndManifest():void
 		{
+			var xml:XML = <world>
+							<assets>
+							</assets>
+							<rooms>
+							</rooms>
+						</world>;
+			xml.@name = "Matt's World";
+			xml.@tilesize = 16;
+			xml.@width = 20; //TODO
+			xml.@height = 15; //TODO
 			
+			var i:int;
+			var xmlassets:XML = xml.assets[0];
+			for (i = 0; i < AssetLoader.tilesets.length; i++)
+			{
+				var xmlasset:XML = <asset />;
+				xmlasset.@src = AssetLoader.tilesets[i].src;
+				xmlassets.appendChild(xmlasset);
+			}
+			
+			var xmlrooms:XML = xml.rooms[0];
+			for (i = 0; i < room_data.length; i++)
+			{
+				var xmlRoom:XML = room_data[i].toXML();
+				xmlrooms.appendChild(xmlRoom);
+			}
+			var ba:ByteArray = new ByteArray();
+			ba.writeUTFBytes(xml);
+			
+			var fr:FileReference = new FileReference();
+			fr.save(ba, "mattsworld.xml");
 		}
 		
 		private function initNewRoom(room:RoomData)
 		{
+			var i:int;
 			//Empty array for starting tilesets
 			var arr:Array = new Array();
-			for (var i:int = 0; i < room.width * room.height; i++)
+			for (i = 0; i < room.width * room.height; i++)
 			{
 				arr[i] = 0;
 			}
 			
-			for (var i:int = 0; i < 5; i++)
+			for (i = 0; i < 5; i++)
 			{
 				room.layer_tilesets[i] = AssetLoader.tilesets[0].src;
-				room.layer_data[i] = arr;
+				room.layer_data[i] = arr.slice();
 			}
 			
 			room.empty = true;

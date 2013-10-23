@@ -20,17 +20,8 @@ package org.pyroclast.system
 		
 		
 		//Sprites
-		[Embed(source="../../../../Assets/MorganpickleTile.png")]
-		public static var morganSpritesheet:Class;
-		
-		[Embed(source = "../../../../Assets/LavaWave.png")]
-		public static var lavaSprite:Class;
-		
-		[Embed(source = "../../../../Assets/Portal.png")]
-		public static var portalSprite:Class;
-		
-		[Embed(source = "../../../../Assets/Doggie.png")]
-		public static var puppySprite:Class;
+		[Embed(source = "../../../../Assets/playerSpritesheet.png")]
+		public static var playerSpritesheet:Class;
 		
 		[Embed(source = "../../../../Assets/gemSprite.png")]
 		public static var gemSprite:Class;
@@ -60,6 +51,24 @@ package org.pyroclast.system
 		
 		[Embed(source = "../../../../Assets/tilesets/grass.png")]
 		public static var grassTileset:Class;
+		
+		[Embed(source = "../../../../Assets/tilesets/crystalCaves.png")]
+		public static var crystalCavesTileset:Class;
+		
+		[Embed(source = "../../../../Assets/tilesets/lavaCaves.png")]
+		public static var lavaCavesTileset:Class;
+		
+		[Embed(source = "../../../../Assets/tilesets/objects.png")]
+		public static var objectsTileset:Class;
+		
+		[Embed(source = "../../../../Assets/tilesets/surface.png")]
+		public static var surfaceTileset:Class;
+		
+		[Embed(source = "../../../../Assets/tilesets/temple.png")]
+		public static var templeTileset:Class;
+		
+		[Embed(source = "../../../../Assets/tilesets/village.png")]
+		public static var villageTileset:Class;
 		
 		
 		

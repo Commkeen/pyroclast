@@ -96,8 +96,8 @@ package org.pyroclast.system
 			for (var i:int = 0; i < layer_data.length; i++)
 			{
 				room.layer[i] = FlxTilemap.arrayToCSV(layer_data[i], width);
-				room.layer.@index = i;
-				room.layer.@tileset = layer_tilesets[i];
+				room.layer[i].@index = i;
+				room.layer[i].@tileset = layer_tilesets[i];
 			}
 			
 			return room;

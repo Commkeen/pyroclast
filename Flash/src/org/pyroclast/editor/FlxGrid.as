@@ -237,6 +237,11 @@ package org.pyroclast.editor
 			return !grid_group.visible;
 		}
 		
+		public function toggleGridlines():void
+		{
+			overlay.visible = !overlay.visible;
+		}
+		
 		
 		//TODO: Both of these functions need to be adjusted for zooming and scale and stuff
 		public function getRelativeMousePosition(absoluteMousePosition:Point):Point

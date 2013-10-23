@@ -19,7 +19,7 @@ package org.pyroclast.editor
 		public var room_rowsxcols:Point;
 		public var room_cell_size:uint = 16;
 		public var tile_cell_size:uint = 16;
-		public var world_cell_size:uint = 16;
+		public var world_cell_size:uint = 8;
 		
 		public var world_grid:FlxGrid;
 		public var tileset_grid:FlxGrid;
@@ -45,8 +45,8 @@ package org.pyroclast.editor
 		
 		public var area_button:FlxSprite;
 		public var area_text:FlxText;
-		public var area_button_size:uint = 50;
-		public var selected_area:uint = 0;
+		public var area_button_size:uint = 20;
+		public var selected_area_index:uint = 0;
 		public var area_color:uint = 0xFF0000FF;
 		
 		public var mouse_prev:Point;
@@ -57,7 +57,12 @@ package org.pyroclast.editor
 		override public function create():void
 		{
 			load_finished();
-			initialized = true;
+			FlxG.resetCameras(new FlxCamera(0, 0, 1200, 1000, 2));
+			//FlxG.camera.visible = false;
+			//var testCamera:FlxCamera = new FlxCamera(100, 100, 200, 200, 2);
+			//testCamera.focusOn(new FlxPoint(100, 100));
+			//testCamera.visible = true;
+			//FlxG.addCamera(testCamera);
 		}
 		
 		override public function update():void
@@ -84,6 +89,22 @@ package org.pyroclast.editor
 				}
 			}
 			
+			//If the user pressed "G", turn the grid lines off on the layer grid
+			if (FlxG.keys.justPressed("G"))
+			{
+				for each(var grid:FlxGrid in room_layers)
+				{
+					grid.toggleGridlines();
+				}
+				
+			}
+			
+			//If the user pressed "H", turn grid lines off on the tileset grid
+			if (FlxG.keys.justPressed("H"))
+			{
+				tileset_grid.toggleGridlines();
+			}
+			
 			//If the user presses "P", we switch to the game and place the player where the mouse is pointing.
 			if (FlxG.keys.justPressed("P"))
 			{
@@ -93,6 +114,34 @@ package org.pyroclast.editor
 				GameManager.switchState();
 			}
 			
+			checkTilesetKeys();
+			checkWorldKeys();
+			
+		}
+		
+		
+		private function checkTilesetKeys():void
+		{
+			if (FlxG.keys.justPressed("W"))
+				setCurrentTile(current_tile_coords.x, current_tile_coords.y - 1);
+			if (FlxG.keys.justPressed("A"))
+				setCurrentTile(current_tile_coords.x - 1, current_tile_coords.y);
+			if (FlxG.keys.justPressed("S"))
+				setCurrentTile(current_tile_coords.x, current_tile_coords.y + 1);
+			if (FlxG.keys.justPressed("D"))
+				setCurrentTile(current_tile_coords.x + 1, current_tile_coords.y);
+		}
+		
+		private function checkWorldKeys():void
+		{
+			if (FlxG.keys.justPressed("UP"))
+				setCurrentRoom(current_room.x, current_room.y - 1);
+			if (FlxG.keys.justPressed("LEFT"))
+				setCurrentRoom(current_room.x - 1, current_room.y);
+			if (FlxG.keys.justPressed("DOWN"))
+				setCurrentRoom(current_room.x, current_room.y + 1);
+			if (FlxG.keys.justPressed("RIGHT"))
+				setCurrentRoom(current_room.x + 1, current_room.y);
 		}
 		
 		public function update_grids():void
@@ -166,11 +215,12 @@ package org.pyroclast.editor
 		
 		public function load_finished():void
 		{
+			if (initialized) return;
 			FlxG.bgColor = 0xFF666666;
 			
 			roomManager = GameManager.roomDataManager;
 			
-			world_grid = new FlxGrid(50, 425, 320, 240, world_cell_size);
+			world_grid = new FlxGrid(10, 280, 160, 160, world_cell_size);
 			world_grid.onClickCallback = world_clicked;
 			world_grid.showCursor();
 			
@@ -179,13 +229,21 @@ package org.pyroclast.editor
 			add(world_grid_back);
 			add(world_grid.grid_group);
 			
-			var world_title_text:FlxText = new FlxText(world_grid.x, world_grid.y - 20, 150, "World Map");
-			world_title_text.size = 16;
-			add(world_title_text);
+			area_button = new FlxSprite(world_grid.x + 180, world_grid.y);
+			area_button.makeGraphic(area_button_size, area_button_size, area_color, true);
+			add(area_button);
+			
+			area_text = new FlxText(area_button.x, area_button.y - 25, 100, "Area: DEFAULT");
+			area_text.size = 8;
+			add(area_text);
+			
+			//var world_title_text:FlxText = new FlxText(world_grid.x, world_grid.y - 20, 150, "World Map");
+			//world_title_text.size = 16;
+			//add(world_title_text);
 			
 			
 			
-			tileset_grid = new FlxGrid(50, 30, 128, 224, tile_cell_size);
+			tileset_grid = new FlxGrid(10, 10, 128, 224, tile_cell_size);
 			tileset_grid.onClickCallback = tileset_clicked;
 			tileset_grid.showCursor();
 			
@@ -194,13 +252,13 @@ package org.pyroclast.editor
 			add(tileset_background);
 			add(tileset_grid.grid_group);
 			
-			var tile_title_text:FlxText = new FlxText(tileset_grid.x, tileset_grid.y - 20, 150, "Tileset");
-			tile_title_text.size = 16;
-			add(tile_title_text);
+			//var tile_title_text:FlxText = new FlxText(tileset_grid.x, tileset_grid.y - 20, 150, "Tileset");
+			//tile_title_text.size = 16;
+			//add(tile_title_text);
 			
 			
 			
-			room_background = new FlxSprite(420, 10);
+			room_background = new FlxSprite(200, 10);
 			room_background.makeGraphic(room_size.x, room_size.y, 0xFF000000);
 			add(room_background);
 			
@@ -209,7 +267,7 @@ package org.pyroclast.editor
 			var j:int;
 			for (i = 0; i < layer_count; i++)
 			{
-				room_layers.push(new FlxGrid(420, 10, room_size.x, room_size.y, room_cell_size, 0x00000000));
+				room_layers.push(new FlxGrid(200, 10, room_size.x, room_size.y, room_cell_size, 0x00000000));
 				room_layers[i].onClickCallback = room_clicked;
 				room_layers[i].drag_selectable = true;
 				add(room_layers[i].grid_group);
@@ -218,26 +276,22 @@ package org.pyroclast.editor
 			
 			room_rowsxcols = new Point(room_layers[current_layer].cols_displayed, room_layers[current_layer].rows_displayed);
 			
-			
-			setCurrentRoom(GameManager.currentRoomCoords.x, GameManager.currentRoomCoords.y);
-			
-			tileset_grid.loadTilesetOnGrid(AssetLoader.tilesets[current_tileset]);
-			//current_tile = tileset_grid.getTile(0, 0);
-			current_tile_coords = new Point(0, 0);
-			updateCurrentTileDisplay();
-			
-			add(new FlxButton(tileset_grid.x, tileset_grid.y + 240, "<<", tilesetLeft));
-			add(new FlxButton(tileset_grid.x + 116, tileset_grid.y + 240, ">>", tilesetRight));
-			tileset_text = new FlxText(tileset_grid.x + 92, tileset_grid.y + 238, 50, "" + current_tileset);
-			tileset_text.size = 16;
+			var tilesetLeftButton:FlxButton = new FlxButton(tileset_grid.x, tileset_grid.y + 240, "<<", tilesetLeft);
+			tilesetLeftButton.width = 20;
+			add(tilesetLeftButton);
+			var tilesetRightButton:FlxButton = new FlxButton(tileset_grid.x + 72, tileset_grid.y + 240, ">>", tilesetRight);
+			tilesetRightButton.width = 20;
+			add(tilesetRightButton);
+			tileset_text = new FlxText(tileset_grid.x + 32, tileset_grid.y + 238, 50, "" + current_tileset);
+			tileset_text.size = 8;
 			add(tileset_text);
 			
-			layer_text = new FlxText(room_layers[current_layer].x, room_layers[current_layer].y + room_layers[current_layer].height + 10, 100, "Layer: " + current_layer)
-			layer_text.size = 16;
+			layer_text = new FlxText(room_layers[current_layer].x + 140, room_layers[current_layer].y + room_layers[current_layer].height + 10, 100, "Layer: " + current_layer)
+			layer_text.size = 8;
 			add(layer_text);
 			add(new FlxButton(room_layers[current_layer].x + 100, room_layers[current_layer].y + room_layers[current_layer].height + 10, "<<", layerLeft));
 			add(new FlxButton(room_layers[current_layer].x + 200, room_layers[current_layer].y + room_layers[current_layer].height + 10, ">>", layerRight));
-			layer_visibility_button = new FlxButton(room_layers[current_layer].x + 400, room_layers[current_layer].y + room_layers[current_layer].height + 10, "Layer Transparency: OFF", toggleLayerTransparency);
+			layer_visibility_button = new FlxButton(room_layers[current_layer].x + 240, room_layers[current_layer].y + room_layers[current_layer].height + 10, "Layer Transparency: OFF", toggleLayerTransparency);
 			layer_visibility_button.label = new FlxText(0, 0, 300, "Layer Transparency: OFF");
 			layer_visibility_button.scale.x = 2.1;
 			layer_visibility_button.labelOffset.x = -layer_visibility_button.width / 2 + 15;
@@ -245,25 +299,27 @@ package org.pyroclast.editor
 			layer_visibility_button.width = layer_visibility_button.width * 2.1;
 			add(layer_visibility_button);
 			
-			area_button = new FlxSprite(world_grid.x, world_grid.y - 80);
-			area_button.makeGraphic(area_button_size, area_button_size, area_color, true);
-			add(area_button);
+			setCurrentRoom(GameManager.currentRoomCoords.x, GameManager.currentRoomCoords.y);
 			
-			area_text = new FlxText(area_button.x, area_button.y - 25, 100, "Area: " + selected_area);
-			area_text.size = 16;
-			add(area_text);
+			tileset_grid.loadTilesetOnGrid(AssetLoader.tilesets[current_tileset]);
+			//current_tile = tileset_grid.getTile(0, 0);
+			current_tile_coords = new Point(0, 0);
 			
-			add(new FlxButton(1150, 600, "SAVE", roomManager.saveAllRoomDataAndManifest));
-			add(new FlxButton(1150, 640, "LOAD", roomManager.reloadAll));
+			
+			
+			
+			
+			updateLayer();
+			
+			
+			add(new FlxButton(600, 400, "SAVE", roomManager.saveAllRoomDataAndManifest));
+			//add(new FlxButton(1150, 640, "LOAD", roomManager.reloadAll));
 			
 			
 			initialized = true;
 			trace("This worked!!!");
 			
-			//var testCamera:FlxCamera = new FlxCamera(100, 100, 200, 200, 2);
-			//testCamera.focusOn(new FlxPoint(100, 100));
-			//testCamera.visible = true;
-			//FlxG.addCamera(testCamera);
+			
 			
 		}
 		
@@ -277,7 +333,6 @@ package org.pyroclast.editor
 			currentRoomData = roomManager.getRoomDataFromCoordinates(x, y);
 			
 			
-			
 			if (currentRoomData)
 			{
 				if (ctrl_down)
@@ -287,16 +342,9 @@ package org.pyroclast.editor
 				}	
 				else
 				{
-					// FIX THIS TO WORK WITH NEW ROOM DATA
-					//room_layers[current_layer].loadRoomData(current_layer, assets, world_data[current_room.y][current_room.x]);
 					loadRoomLayers();
-					selected_area = currentRoomData.area;
-					area_color = 0xFF000000;
-					if (area_button != null)
-					{
-						area_button.makeGraphic(area_button_size, area_button_size, area_color, true);
-						area_text.text = "Area: " + selected_area;
-					}
+					selected_area_index = currentRoomData.area;
+					updateAreaDisplay();
 				}
 			}
 			else
@@ -306,6 +354,8 @@ package org.pyroclast.editor
 			}
 			
 			world_grid.positionCursor(current_room);
+			
+			updateLayer();
 		}
 		
 		public function setCurrentTile(x:uint, y:uint):void
@@ -317,8 +367,7 @@ package org.pyroclast.editor
 			current_tile_coords = new Point(x, y);
 			current_tile_index = x + y * 8; //TODO: Calculate properly
 			
-			// ToDo: Draw the selected tile to a FlxSprite. If it is null, just make the FlxSprite Black
-			updateCurrentTileDisplay();
+			tileset_grid.positionCursor(current_tile_coords);
 		}
 		
 		public function placeTile(x:uint, y:uint, remove:Boolean = false):void
@@ -350,43 +399,21 @@ package org.pyroclast.editor
 			}
 		}
 		
-		public function updateCurrentTileDisplay():void
-		{
-			/*
-			if (!current_tile_display) 
-			{
-				current_tile_display = new FlxSprite(tileset_grid.x + 270, tileset_grid.y + 10);
-				var temp:FlxText = new FlxText(tileset_grid.x + 240, tileset_grid.y - 20, 150, "Selected Tile");
-				temp.size = 12;
-				add(temp);
-				add(current_tile_display);
-			}
-			
-			if (current_tile)
-			{
-				var scale_factor:Number = room_cell_size/current_tile.width;
-				var tile:BitmapData = new BitmapData(room_cell_size, room_cell_size, true, 0x00000000);
-				tile.draw(current_tile, new Matrix(scale_factor, 0, 0, scale_factor, 0, 0));
-				var container:Bitmap = new Bitmap(tile);
-				current_tile_display.loadExtGraphic(container, false, false, room_cell_size, room_cell_size, true);
-			}
-			else
-			{
-				current_tile_display.makeGraphic(room_cell_size, room_cell_size, 0xFF000000, true);
-			}
-			*/
-		}
-		
 		public function scrollTilesets(dir:int):void
 		{
 			dir > 0 ? ++current_tileset : --current_tileset;
 			current_tileset = current_tileset >= AssetLoader.tilesets.length ? 0 : (current_tileset < 0 ? AssetLoader.tilesets.length - 1 : current_tileset);
 			
+			updateTileset();
+		}
+		
+		public function updateTileset():void
+		{
 			tileset_grid.loadTilesetOnGrid(AssetLoader.tilesets[current_tileset]);
-			//current_tile = tileset_grid.getTile(0, 0);
-			current_tile_coords = new Point(0, 0);
-			updateCurrentTileDisplay();
 			tileset_text.text = "" + current_tileset;
+			
+			currentRoomData.layer_tilesets[current_layer] = AssetLoader.tilesets[current_tileset].src;
+			room_layers[current_layer].loadLayerOnGrid(current_layer, currentRoomData);
 		}
 		
 		public function changeLayers(dir:int):void
@@ -394,17 +421,27 @@ package org.pyroclast.editor
 			dir > 0 ? ++current_layer : --current_layer;
 			current_layer = current_layer >= layer_count ? 0 : (current_layer < 0 ? layer_count - 1 : current_layer);
 			
+			updateLayer();
+		}
+		
+		public function updateLayer():void
+		{
 			setLayerVisibility();
 			
 			layer_text.text = "Layer: " + current_layer;
-			/*
-			tileset_grid.setTileset(assets.tilesets[current_tileset]);
-			current_tile = tileset_grid.getTile(0, 0);
-			current_tile_coords = new Point(0, 0);
-			updateCurrentTileDisplay();
+			
+			for (var i:int = 0; i < AssetLoader.tilesets.length; i++)
+			{
+				if (AssetLoader.tilesets[i].src == currentRoomData.layer_tilesets[current_layer])
+				{
+					current_tileset = i;
+				}
+			}
+			
+			tileset_grid.loadTilesetOnGrid(AssetLoader.tilesets[current_tileset]);
 			tileset_text.text = "" + current_tileset;
-			*/
 		}
+		
 		public function toggleLayerTransparency():void
 		{
 			layer_visibility = ++layer_visibility >= 3 ? 0 : layer_visibility;
@@ -417,27 +454,30 @@ package org.pyroclast.editor
 		
 		public function setLayerVisibility():void
 		{
-			/*
+			
 			for (var i:int = 0; i < layer_count; i++)
 			{
 				if (layer_visibility == 0)
 				{
 					i == current_layer ? room_layers[i].show() : room_layers[i].hide();
-					room_layers[i].grid.alpha = 1;
+					//room_layers[i].grid.alpha = 1;
 				}
 				else if (layer_visibility == 1)
 				{
-					room_layers[i].show();
-					var diff:int = Math.abs(current_layer - i);
-					diff >= 0 && diff <= 2 ? room_layers[i].grid.alpha = (1 - diff * .3) : room_layers[i].hide();
+					if (i <= current_layer)
+						room_layers[i].show();
+					else
+						room_layers[i].hide();
+					//var diff:int = Math.abs(current_layer - i);
+					//diff >= 0 && diff <= 2 ? room_layers[i].grid.alpha = (1 - diff * .3) : room_layers[i].hide();
 				}
 				else
 				{
 					room_layers[i].show();
-					room_layers[i].grid.alpha = 1;
+					//room_layers[i].grid.alpha = 1;
 				}
 			}
-			*/
+			
 		}
 		
 		public function loadRoomLayers():void
@@ -462,24 +502,19 @@ package org.pyroclast.editor
 		
 		public function toggleRoomArea():void
 		{
-			selected_area = ++selected_area == 3 ? 0 : selected_area;
-			switch(selected_area)
-			{
-				case 0:
-					area_color = 0xFF0000FF;
-					break;
-				case 1:
-					area_color = 0xFFFF0000;
-					break;
-				case 2:
-					area_color = 0xFF00FF00;
-					break;
-			}
+			selected_area_index = ++selected_area_index == Area.NUM_OF_AREAS ? 0 : selected_area_index;
+			updateAreaDisplay();
+		}
+		
+		public function updateAreaDisplay():void
+		{
+			var area:Area = Area.getArea(selected_area_index);
+			area_color = area.getEditorColor();
 			
-			currentRoomData.area = selected_area;
+			currentRoomData.area = selected_area_index;
 			world_grid.setCellColor(current_room.x, current_room.y, area_color);
 			area_button.makeGraphic(area_button_size, area_button_size, area_color, true);
-			area_text.text = "Area: " + selected_area;
+			area_text.text = "Area: " + area.getName();
 		}
 		
 		public function checkAreaButtonClick(x:int, y:int):void
@@ -648,7 +683,6 @@ package org.pyroclast.editor
 		public function switchFromGame(roomID:int)
 		{
 			load_finished();
-			setCurrentRoom(roomManager.getRoomDataFromID(roomID).roomX, roomManager.getRoomDataFromID(roomID).roomY);
 		}
 		
 		

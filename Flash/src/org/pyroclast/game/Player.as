@@ -57,10 +57,10 @@ package org.pyroclast.game
 		
 		public function init():void
 		{
-			this.loadGraphic(Resources.morganSpritesheet, true, true, 16, 32);
+			this.loadGraphic(Resources.playerSpritesheet, true, true, 16, 32);
 			addAnimation("stand", new Array(0,0), 5, true);
-			addAnimation("jump", new Array(4,4), 5, true);
-			addAnimation("run", new Array(1, 2, 1, 3), 10, true);
+			addAnimation("jump", new Array(6,6), 5, true);
+			addAnimation("run", new Array(1, 2, 3, 4), 10, true);
 			
 			deathParticleEmitter = new FlxEmitter(x, y, 100);
 			deathParticleEmitter.at(this);

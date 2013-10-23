@@ -19,7 +19,7 @@ package org.pyroclast.game
 			var background:FlxSprite = new FlxSprite(0, 0);
 			background.loadGraphic(Resources.titleScreenBg);
 			add(background);
-			FlxG.playMusic(Resources.voidMusic, 0.3);
+			//FlxG.playMusic(Resources.voidMusic, 0.3);
 			
 			var instructions1:FlxText = new FlxText(0, 180, FlxG.width, "Arrow Keys to move");
 			var instructions2:FlxText = new FlxText(0, 190, FlxG.width, "Spacebar to jump");

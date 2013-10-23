@@ -31,6 +31,11 @@ package org.pyroclast.system
 			tilesets = new Vector.<LoadedImage>();
 			tilesets[0] = new LoadedImage(Resources.doodlesTileset, "doodles.png");
 			tilesets[1] = new LoadedImage(Resources.grassTileset, "grass.png");
+			tilesets[2] = new LoadedImage(Resources.villageTileset, "village.png");
+			tilesets[3] = new LoadedImage(Resources.crystalCavesTileset, "crystalCaves.png");
+			tilesets[4] = new LoadedImage(Resources.templeTileset, "temple.png");
+			tilesets[5] = new LoadedImage(Resources.surfaceTileset, "surface.png");
+			tilesets[6] = new LoadedImage(Resources.lavaCavesTileset, "lavaCaves.png");
 			onFullyLoaded();
 			
 			function setMasterFilePath(xml:XML):void
